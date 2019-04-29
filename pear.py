@@ -14,14 +14,15 @@ import os
 DATA_TYPE = "float32"
 
 
-def load_sound_file_into_memory(path):
+def load_sound_file_into_memory(path, volume=0.1):
     """
     Get the in-memory version of a given path to a wav file
     :param path: wav file to be loaded
     :return: audio_data, a 2D numpy array
     """
-
+    
     audio_data, _ = soundfile.read(path, dtype=DATA_TYPE)
+    audio_data *= float(volume)
     return audio_data
 
 
@@ -48,7 +49,7 @@ def get_device_number_if_usb_soundcard(index_info):
 
     index, info = index_info
 
-    if "USB Audio Device" in info["name"]:
+    if "USB2.0 Device: Audio" in info["name"]:
         return index
     return False
 
@@ -85,6 +86,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='a simple tool for sound installations')
     parser.add_argument("dir", type=dir_path)
+    parser.add_argument("vol")
     args = parser.parse_args()
 
     def good_filepath(path):
@@ -100,9 +102,11 @@ if __name__ == "__main__":
 
     print("Discovered the following .wav files:", sound_file_paths)
 
-    files = [load_sound_file_into_memory(path) for path in sound_file_paths]
+    files = [load_sound_file_into_memory(path, args.vol) for path in sound_file_paths]
 
     print("Files loaded into memory, Looking for USB devices.")
+    
+    print("All sound devices: {}".format(sounddevice.query_devices()))
 
     usb_sound_card_indices = list(filter(lambda x: x is not False,
                                          map(get_device_number_if_usb_soundcard,
@@ -147,4 +151,3 @@ if __name__ == "__main__":
             print("Streams stopped")
 
     print("Bye.")
-
